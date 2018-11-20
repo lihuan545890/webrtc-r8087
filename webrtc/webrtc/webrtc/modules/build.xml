@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project name="hello" basedir="." default="main">
+  <!-- 定义变量 -->
+  <property name="lib.dir" value="lib"/>
+  <property name="dist.dir" value="dist"/>
+
+  <!-- 初始化任务 -->
+  <target name="init">
+    <echo message="初始化操作，创建目录！"/>
+    <mkdir dir="${lib.dir}"/>
+    <mkdir dir="${dist.dir}"/>
+  </target>
+
+  <!-- 构建子工程mylib任务 -->
+  <target name="audio_device_module_java" depends="init">
+    <echo message="audio_device_module_java"/>
+    <ant dir="audio_device/android/java"/>
+  </target>
+
+    <!-- 构建子工程myapp任务 -->
+  <target name="video_render_module_java" depends="audio_device_module_java">
+    <echo message="video_render_module_java"/>
+    <ant dir="video_render/android/java"/>
+  </target>  
+  
+  <!-- 构建子工程myapp任务 -->
+  <target name="video_capture_module_java" depends="video_render_module_java">
+    <echo message="video_capture_module_java"/>
+    <ant dir="video_capture/android/java"/>
+  </target>
+
+
+  
+  <!-- 运行任务 -->
+  <target name="run" depends="video_capture_module_java">
+    <path id="mypath">
+      <fileset dir="${lib.dir}"/>
+      <fileset dir="${dist.dir}"/>
+    </path>
+  </target>
+
+  <!-- 清除任务 -->
+  <target name="clean">
+    <echo message="清除操作，删除目标目录！"/>
+    <delete dir="${dist.dir}"/>
+    <delete dir="${lib.dir}"/>
+  </target>
+
+  <!-- 默认任务顺序：清除、mylib、myapp -->
+  <target name="main" depends="clean, run">
+    <echo message="结束构建工程「myapp」！" />
+  </target>
+
+</project>
