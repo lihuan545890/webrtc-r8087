@@ -204,7 +204,7 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
       min_mfps *= frameDropRatio;
       max_mfps *= frameDropRatio;
       Log.d(TAG, "Camera preview mfps range: " + min_mfps + " - " + max_mfps);
-      parameters.setPreviewFpsRange(min_mfps, max_mfps);
+    //  parameters.setPreviewFpsRange(min_mfps, max_mfps);
 
       int format = ImageFormat.NV21;
       parameters.setPreviewFormat(format);
