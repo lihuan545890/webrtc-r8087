@@ -37,9 +37,9 @@ struct CaptureCapability {
   unsigned int expectedCaptureDelay;
   bool interlaced;
   CaptureCapability() {
-    width = 0;
-    height = 0;
-    maxFPS = 0;
+    width = 1280;
+    height = 720;
+    maxFPS = 30;
     rawType = kVideoI420;
     codecType = kVideoCodecUnknown;
     expectedCaptureDelay = 0;
