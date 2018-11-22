@@ -341,9 +341,9 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
       double durationMs = captureTimeMs - lastCaptureTimeMs;
       averageDurationMs = 0.9 * averageDurationMs + 0.1 * durationMs;
       if ((frameCount % 30) == 0) {
-        Log.d(TAG, "Camera TS " + captureTimeMs +
+ /*       Log.d(TAG, "Camera TS " + captureTimeMs +
             ". Duration: " + (int)durationMs + " ms. FPS: " +
-            (int) (1000 / averageDurationMs + 0.5));
+            (int) (1000 / averageDurationMs + 0.5));*/
       }
     }
     lastCaptureTimeMs = captureTimeMs;
@@ -380,7 +380,7 @@ public class VideoCaptureAndroid implements PreviewCallback, Callback {
 
   private void setPreviewRotationOnCameraThread(
       int rotation, Exchanger<IOException> result) {
-    Log.v(TAG, "setPreviewRotation:" + rotation);
+//    Log.v(TAG, "setPreviewRotation:" + rotation);
 
     int resultRotation = 0;
     if (info.facing == Camera.CameraInfo.CAMERA_FACING_FRONT) {
