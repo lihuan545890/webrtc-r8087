@@ -5,6 +5,34 @@ LOCAL_MODULE    := libvpx
 LOCAL_SRC_FILES := webrtc/webrtc/third_party/libvpx/obj/local/armeabi-v7a/libvpx.a
 include $(PREBUILT_STATIC_LIBRARY)
 
+LOCAL_MODULE    := libx264
+LOCAL_SRC_FILES := webrtc/webrtc/third_party/ffmpeg/libx264/lib/libx264.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+LOCAL_MODULE    := libavcodec
+LOCAL_SRC_FILES := webrtc/webrtc/third_party/ffmpeg/android/arm-v7a/lib/libavcodec.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+LOCAL_MODULE    := libavfilter
+LOCAL_SRC_FILES := webrtc/webrtc/third_party/ffmpeg/android/arm-v7a/lib/libavfilter.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+LOCAL_MODULE    := libavformat
+LOCAL_SRC_FILES := webrtc/webrtc/third_party/ffmpeg/android/arm-v7a/lib/libavformat.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+LOCAL_MODULE    := libavutil
+LOCAL_SRC_FILES := webrtc/webrtc/third_party/ffmpeg/android/arm-v7a/lib/libavutil.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+LOCAL_MODULE    := libswresample
+LOCAL_SRC_FILES := webrtc/webrtc/third_party/ffmpeg/android/arm-v7a/lib/libswresample.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+LOCAL_MODULE    := libswscale
+LOCAL_SRC_FILES := webrtc/webrtc/third_party/ffmpeg/android/arm-v7a/lib/libswscale.a
+include $(PREBUILT_STATIC_LIBRARY)
+
 #LOCAL_CPPFLAGS += -std=c++11
 LOCAL_CFLAGS += -DWEBRTC_POSIX
 
@@ -32,6 +60,7 @@ include $(MY_WEBRTC_ROOT_PATH)/modules/video_render/Android.mk
 include $(MY_WEBRTC_ROOT_PATH)/modules/video_coding/utility/Android.mk
 include $(MY_WEBRTC_ROOT_PATH)/modules/video_coding/codecs/vp8/Android.mk
 include $(MY_WEBRTC_ROOT_PATH)/modules/video_coding/codecs/vp9/Android.mk
+include $(MY_WEBRTC_ROOT_PATH)/modules/video_coding/codecs/h264/Android.mk
 include $(MY_WEBRTC_ROOT_PATH)/modules/video_coding/codecs/i420/main/source/Android.mk
 include $(MY_WEBRTC_ROOT_PATH)/modules/video_coding/main/source/Android.mk
 include $(MY_WEBRTC_ROOT_PATH)/modules/video_processing/main/source/Android.mk
@@ -67,7 +96,7 @@ LOCAL_CPP_FEATURES := rtti
 
 LOCAL_CPP_EXTENSION := .cc
 
-PROJECT_PATH :=/project/webrtc/webrtc
+PROJECT_PATH :=/project/mnt/webrtc-r8087/webrtc/webrtc
 LOCAL_C_INCLUDES := $(PROJECT_PATH) \
 					$(PROJECT_PATH)/webrtc \
 					$(PROJECT_PATH)/webrtc/third_party/icu/source/common
@@ -107,6 +136,13 @@ LOCAL_WHOLE_STATIC_LIBRARIES := libmedia_file \
 								libwebrtc_opus \
 								libpcm16b \
 								libvpx \
+								libx264 \
+								libavcodec \
+								libavfilter \
+								libavformat \
+								libavutil \
+								libswresample \
+								libswscale \
 								libneteq \
 								libvideo_capture_module \
 								libvideo_capture_module_internal_impl \
@@ -121,6 +157,7 @@ LOCAL_WHOLE_STATIC_LIBRARIES := libmedia_file \
 								libvideo_coding_utility \
 								libwebrtc_vp8 \
 								libwebrtc_vp9 \
+								libwebrtc_h264 \
 								libwebrtc_i420 \
 								libwebrtc_video_coding \
 								libvideo_engine_core \
