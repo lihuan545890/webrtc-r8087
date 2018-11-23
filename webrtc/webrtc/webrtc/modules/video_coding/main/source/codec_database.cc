@@ -22,8 +22,19 @@
 #ifdef VIDEOCODEC_VP9
 #include "webrtc/modules/video_coding/codecs/vp9/include/vp9.h"
 #endif
+#ifdef VIDEOCODEC_H264
+#include "webrtc/modules/video_coding/codecs/h264/include/h264.h"
+#endif
 #include "webrtc/modules/video_coding/main/source/internal_defines.h"
 #include "webrtc/system_wrappers/interface/logging.h"
+
+
+
+#include <android/log.h>
+#include <stdio.h>
+
+#define WEBRTC_TRACE(a,b,c,...)  __android_log_print(ANDROID_LOG_DEBUG, "codec_database", __VA_ARGS__)
+
 
 namespace {
 const size_t kDefaultPayloadSize = 1440;
@@ -689,8 +700,12 @@ VCMGenericEncoder* VCMCodecDataBase::CreateEncoder(
     case kVideoCodecI420:
       return new VCMGenericEncoder(*(new I420Encoder));
 #endif
+#ifdef VIDEOCODEC_H264
+    case kVideoCodecH264:
+      return new VCMGenericEncoder(*(H264Encoder::Create()));
+#endif
     default:
-      LOG(LS_WARNING) << "No internal encoder of this type exists.";
+      WEBRTC_TRACE(kTraceDebug, kTraceVideoCoding, -1, "No internal encoder of this type exists.");
       return NULL;
   }
 }
