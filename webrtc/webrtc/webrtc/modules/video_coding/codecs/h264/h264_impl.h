@@ -3,6 +3,12 @@
 
 #include "webrtc/modules/video_coding/codecs/h264/include/h264.h"
 
+extern "C"{
+	#include "libavcodec/avcodec.h"
+	#include "libavformat/avformat.h"
+	#include "libavutil/opt.h"
+	#include "libswscale/swscale.h"
+}
 namespace webrtc {
 
 class H264EncoderImpl : public H264Encoder {
@@ -25,7 +31,10 @@ class H264EncoderImpl : public H264Encoder {
 		bool inited_;
 
 // ffmpeg avcodec
-		
+		AVCodec* pCodec;
+		AVCodecContext* pCodecCtx;
+		AVPacket enc_pkt;
+		AVFrame *pFrameYUV;
 		
 };
 

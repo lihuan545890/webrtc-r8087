@@ -64,7 +64,6 @@ include $(MY_WEBRTC_ROOT_PATH)/modules/video_coding/codecs/h264/Android.mk
 include $(MY_WEBRTC_ROOT_PATH)/modules/video_coding/codecs/i420/main/source/Android.mk
 include $(MY_WEBRTC_ROOT_PATH)/modules/video_coding/main/source/Android.mk
 include $(MY_WEBRTC_ROOT_PATH)/modules/video_processing/main/source/Android.mk
-
 include $(MY_WEBRTC_ROOT_PATH)/modules/audio_device/Android.mk
 include $(MY_WEBRTC_ROOT_PATH)/modules/audio_conference_mixer/source/Android.mk
 include $(MY_WEBRTC_ROOT_PATH)/modules/audio_processing/Android.mk
@@ -99,7 +98,8 @@ LOCAL_CPP_EXTENSION := .cc
 PROJECT_PATH :=/project/mnt/webrtc-r8087/webrtc/webrtc
 LOCAL_C_INCLUDES := $(PROJECT_PATH) \
 					$(PROJECT_PATH)/webrtc \
-					$(PROJECT_PATH)/webrtc/third_party/icu/source/common
+					$(PROJECT_PATH)/webrtc/third_party/icu/source/common \
+					$(PROJECT_PATH)/webrtc/third_party/ffmpeg/android/arm-v7a/include
 
 LOCAL_SRC_FILES :=   $(PROJECT_PATH)/webrtc/examples/android/media_demo/jni/jni_helpers.cc \
 					 $(PROJECT_PATH)/webrtc/examples/android/media_demo/jni/on_load.cc \
@@ -137,10 +137,10 @@ LOCAL_WHOLE_STATIC_LIBRARIES := libmedia_file \
 								libpcm16b \
 								libvpx \
 								libx264 \
-								libavcodec \
-								libavfilter \
 								libavformat \
+								libavcodec \
 								libavutil \
+								libavfilter \
 								libswresample \
 								libswscale \
 								libneteq \
@@ -157,8 +157,8 @@ LOCAL_WHOLE_STATIC_LIBRARIES := libmedia_file \
 								libvideo_coding_utility \
 								libwebrtc_vp8 \
 								libwebrtc_vp9 \
-								libwebrtc_h264 \
 								libwebrtc_i420 \
+								libwebrtc_h264 \
 								libwebrtc_video_coding \
 								libvideo_engine_core \
 								libvideo_processing \
