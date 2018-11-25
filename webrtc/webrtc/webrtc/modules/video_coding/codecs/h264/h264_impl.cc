@@ -1,4 +1,5 @@
 #include "webrtc/modules/video_coding/codecs/h264/h264_impl.h"
+#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 
 #include <android/log.h>
 #include <stdio.h>
@@ -14,7 +15,11 @@ H264Encoder* H264Encoder::Create()
 }
 
 H264EncoderImpl::H264EncoderImpl()
+	: encoded_image_(),
+	  encoded_complete_callback_(NULL), 
+	  inited_(false)
 {
+  	  memset(&codec_, 0, sizeof(codec_));
       WEBRTC_TRACE(kTraceDebug, kTraceVideoCoding, -1, "H264Encoder Create Success");   
 }
 
@@ -26,6 +31,11 @@ H264EncoderImpl::~H264EncoderImpl()
 int H264EncoderImpl::Release()
 {
 	inited_ = false;
+    if (encoded_image_._buffer != NULL) {
+      delete [] encoded_image_._buffer;
+      encoded_image_._buffer = NULL;
+    }
+	
 	return WEBRTC_VIDEO_CODEC_OK;
 }
 
@@ -54,6 +64,18 @@ int H264EncoderImpl::InitEncode(const VideoCodec * codec_settings, int number_of
     if (codec_settings->width < 1 || codec_settings->height < 1) {
       return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
     }
+
+    if (&codec_ != codec_settings) {
+      codec_ = *codec_settings;
+    }
+
+    if (encoded_image_._buffer != NULL) {
+      delete [] encoded_image_._buffer;
+    }
+
+    encoded_image_._size = CalcBufferSize(kI420, codec_.width, codec_.height);
+    encoded_image_._buffer = new uint8_t[encoded_image_._size];
+    encoded_image_._completeFrame = true;
 
 	av_register_all();
 	pCodec = avcodec_find_encoder_by_name("libx264");
@@ -100,6 +122,17 @@ int H264EncoderImpl::Encode(const I420VideoFrame & input_image, const CodecSpeci
       return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
     }
 
+    if (encoded_complete_callback_ == NULL) {
+      return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
+    }
+
+    VideoFrameType frame_type = kDeltaFrame;  
+    // We only support one stream at the moment.  
+    if (frame_types && frame_types->size() > 0) {  
+        frame_type = (*frame_types)[0];  
+    }  
+  
+
 	av_init_packet(&enc_pkt);
 	enc_pkt.data = NULL;
 	enc_pkt.size = 0;
@@ -117,6 +150,11 @@ int H264EncoderImpl::Encode(const I420VideoFrame & input_image, const CodecSpeci
 		return WEBRTC_VIDEO_CODEC_ERROR;
 	}
 
+    encoded_image_._length = 0;
+    encoded_image_._frameType = kDeltaFrame;
+    RTPFragmentationHeader frag_info;
+	frag_info.VerifyAndAllocateFragmentationHeader(1);
+
 	if(enc_got_frame)
 	{
 /*		if(count++<200)
@@ -127,7 +165,26 @@ int H264EncoderImpl::Encode(const I420VideoFrame & input_image, const CodecSpeci
 		{
 			fclose(fp);
 		}
-*/
+*/		uint32_t currentNaluSize = enc_pkt.size - 4;
+		memcpy(encoded_image_._buffer, enc_pkt.data + 4, currentNaluSize);
+		encoded_image_._length = currentNaluSize; 
+
+        frag_info.fragmentationOffset[0] = 0;  
+        frag_info.fragmentationLength[0] = currentNaluSize;  
+        frag_info.fragmentationPlType[0] = pCodecCtx->coded_frame->pict_type;  
+        frag_info.fragmentationTimeDiff[0] = 0;  
+		frag_info.fragmentationTimeDiff[0] = 0;
+
+        if (encoded_image_._length > 0) {  
+            encoded_image_._timeStamp = input_image.timestamp();  
+            encoded_image_.capture_time_ms_ = input_image.render_time_ms();  
+            encoded_image_._encodedHeight = codec_.height;  
+            encoded_image_._encodedWidth = codec_.width;  
+            encoded_image_._frameType = frame_type;  
+            // call back  
+            encoded_complete_callback_->Encoded(encoded_image_, NULL, &frag_info);  
+        } 
+
 		av_free_packet(&enc_pkt);
 	}
 	
@@ -137,8 +194,10 @@ int H264EncoderImpl::Encode(const I420VideoFrame & input_image, const CodecSpeci
 
 int H264EncoderImpl::RegisterEncodeCompleteCallback(EncodedImageCallback * callback)
 {
+	encoded_complete_callback_ = callback;
+    WEBRTC_TRACE(kTraceDebug, kTraceVideoCoding, -1, "H264Encoder RegisterEncodeCompleteCallback success"); 
+	
 	return WEBRTC_VIDEO_CODEC_OK;
-
 }
 
 int H264EncoderImpl::SetChannelParameters(uint32_t packet_loss, int64_t rtt)
