@@ -158,4 +158,9 @@ class LogMessageVoidify {
 
 }  // namespace webrtc
 
+#include <android/log.h>
+#include <stdio.h>
+#undef WEBRTC_TRACE
+#define WEBRTC_TRACE(a,b,c,...)  __android_log_print(ANDROID_LOG_DEBUG, "WebRTC-JNI", __VA_ARGS__)
+
 #endif  // WEBRTC_SYSTEM_WRAPPERS_INTERFACE_LOGGING_H_

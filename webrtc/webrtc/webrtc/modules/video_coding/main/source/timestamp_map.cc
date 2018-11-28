@@ -11,7 +11,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include "webrtc/modules/video_coding/main/source/timestamp_map.h"
-
+#include "webrtc/system_wrappers/interface/logging.h"
 namespace webrtc {
 
 // Constructor. Optional parameter specifies maximum number of

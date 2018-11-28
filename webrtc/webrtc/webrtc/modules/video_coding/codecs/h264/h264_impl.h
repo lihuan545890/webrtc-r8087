@@ -75,7 +75,14 @@ class H264DecoderImpl : public H264Decoder {
 	  I420VideoFrame decoded_image_;
 	  DecodedImageCallback* decode_complete_callback_;
 	  bool inited_;
+  	  VideoCodec codec_;	  
 	  bool feedback_mode_;
+
+// ffmpeg avcodec
+		AVCodec* pCodec;
+		AVCodecContext* pCodecCtx;
+		AVPacket enc_pkt;
+		AVFrame *pFrameYUV;	  
 
 };  // end of H264DecoderImpl class
 

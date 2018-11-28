@@ -147,21 +147,34 @@ int32_t ViEChannel::Init() {
   if (module_process_thread_.RegisterModule(vcm_) != 0) {
     return -1;
   }
-#ifdef VIDEOCODEC_VP8
-  VideoCodec video_codec;
-  if (vcm_->Codec(kVideoCodecVP8, &video_codec) == VCM_OK) {
-    rtp_rtcp_->RegisterSendPayload(video_codec);
-    // TODO(holmer): Can we call SetReceiveCodec() here instead?
-    if (!vie_receiver_.RegisterPayload(video_codec)) {
-      return -1;
-    }
-    vcm_->RegisterReceiveCodec(&video_codec, number_of_cores_);
-    vcm_->RegisterSendCodec(&video_codec, number_of_cores_,
-                           rtp_rtcp_->MaxDataPayloadLength());
-  } else {
-    assert(false);
+
+  for(int i=0; i<vcm_->NumberOfCodecs(); i++)
+  {
+ 	switch(i)
+ 	{
+ 		case kVideoCodecVP8:
+ 		case kVideoCodecH264:
+ 		{
+ 		  VideoCodec video_codec;
+ 		  if (vcm_->Codec(i, &video_codec) == VCM_OK) {
+ 		    rtp_rtcp_->RegisterSendPayload(video_codec);
+ 		    // TODO(holmer): Can we call SetReceiveCodec() here instead?
+ 		    if (!vie_receiver_.RegisterPayload(video_codec)) {
+ 		      return -1;
+ 		    }
+ 		    vcm_->RegisterReceiveCodec(&video_codec, number_of_cores_);
+ 		    vcm_->RegisterSendCodec(&video_codec, number_of_cores_,
+ 		                           rtp_rtcp_->MaxDataPayloadLength());
+ 		  } else {
+ 		    assert(false);
+ 		  }	
+ 		}
+		break;
+ 		default:
+ 			break;
+ 			
+ 	}	
   }
-#endif
 
   return 0;
 }

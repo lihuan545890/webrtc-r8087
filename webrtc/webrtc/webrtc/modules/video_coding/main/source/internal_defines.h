@@ -26,8 +26,8 @@ inline uint32_t MaskWord64ToUWord32(int64_t w64)
 #define VCM_MAX(a, b) (((a) > (b)) ? (a) : (b))
 #define VCM_MIN(a, b) (((a) < (b)) ? (a) : (b))
 
-#define VCM_DEFAULT_CODEC_WIDTH 352
-#define VCM_DEFAULT_CODEC_HEIGHT 288
+#define VCM_DEFAULT_CODEC_WIDTH 1280
+#define VCM_DEFAULT_CODEC_HEIGHT 720
 #define VCM_DEFAULT_FRAME_RATE 30
 #define VCM_MIN_BITRATE 30
 #define VCM_FLUSH_INDICATOR 4

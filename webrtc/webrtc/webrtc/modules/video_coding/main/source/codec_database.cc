@@ -30,12 +30,6 @@
 
 
 
-#include <android/log.h>
-#include <stdio.h>
-
-#define WEBRTC_TRACE(a,b,c,...)  __android_log_print(ANDROID_LOG_DEBUG, "codec_database", __VA_ARGS__)
-
-
 namespace {
 const size_t kDefaultPayloadSize = 1440;
 }
@@ -735,8 +729,12 @@ VCMGenericDecoder* VCMCodecDataBase::CreateDecoder(VideoCodecType type) const {
     case kVideoCodecI420:
       return new VCMGenericDecoder(*(new I420Decoder));
 #endif
+#ifdef VIDEOCODEC_H264
+    case kVideoCodecH264:
+      return new VCMGenericDecoder(*(H264Decoder::Create()));
+#endif
     default:
-      LOG(LS_WARNING) << "No internal decoder of this type exists.";
+      WEBRTC_TRACE(kTraceDebug, kTraceVideoCoding, -1, "No internal decoder of this type exists.");
       return NULL;
   }
 }

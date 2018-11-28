@@ -1,12 +1,10 @@
 #include "webrtc/modules/video_coding/codecs/h264/h264_impl.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
-
-#include <android/log.h>
-#include <stdio.h>
+#include "webrtc/system_wrappers/interface/logging.h"
 
 
-#define WEBRTC_TRACE(a,b,c,...)  __android_log_print(ANDROID_LOG_DEBUG, "H264EncoderImpl", __VA_ARGS__)
-
+//FILE *fp=fopen("/sdcard/test.h264", "wb");
+FILE *fp = fopen("/sdcard/test.yuv", "wb");
 namespace webrtc{
 
 H264Encoder* H264Encoder::Create()
@@ -20,7 +18,6 @@ H264EncoderImpl::H264EncoderImpl()
 	  inited_(false)
 {
   	  memset(&codec_, 0, sizeof(codec_));
-      WEBRTC_TRACE(kTraceDebug, kTraceVideoCoding, -1, "H264Encoder Create Success");   
 }
 
 H264EncoderImpl::~H264EncoderImpl()
@@ -96,7 +93,7 @@ int H264EncoderImpl::InitEncode(const VideoCodec * codec_settings, int number_of
 	pCodecCtx->time_base = (AVRational){1, codec_settings->maxFramerate};
 	pCodecCtx->max_b_frames = 1;
 
-	av_opt_set(pCodecCtx->priv_data, "profile", "main", 0);
+	av_opt_set(pCodecCtx->priv_data, "profile", "baseline", 0);
 	av_opt_set(pCodecCtx->priv_data, "preset", "ultrafast", 0);
 
 	if (avcodec_open2(pCodecCtx, pCodec, NULL) < 0) {
@@ -110,7 +107,7 @@ int H264EncoderImpl::InitEncode(const VideoCodec * codec_settings, int number_of
 
 }
 
-//FILE *fp=fopen("/sdcard/test.h264", "wb");
+
 int H264EncoderImpl::Encode(const I420VideoFrame & input_image, const CodecSpecificInfo * codec_specific_info, const std::vector <VideoFrameType>* frame_types)
 {
 	int enc_got_frame=0;
@@ -188,7 +185,6 @@ int H264EncoderImpl::Encode(const I420VideoFrame & input_image, const CodecSpeci
 		av_free_packet(&enc_pkt);
 	}
 	
-    WEBRTC_TRACE(kTraceDebug, kTraceVideoCoding, -1, "H264Encoder Encode Success kYPlane:%d, kUPlane:%d, encode size:%d", input_image.stride(kYPlane), input_image.stride(kUPlane), enc_pkt.size); 
 	return WEBRTC_VIDEO_CODEC_OK;
 }
 
@@ -212,27 +208,131 @@ H264Decoder* H264Decoder::Create()
 }
 
 H264DecoderImpl::H264DecoderImpl()
+	: decoded_image_(),
+	  decode_complete_callback_(NULL),
+      inited_(false)
 {
-
+  	  memset(&codec_, 0, sizeof(codec_));
 }
 
 H264DecoderImpl::~H264DecoderImpl()
 {
-
+	Release();
 }
 
 int H264DecoderImpl::InitDecode(const VideoCodec * inst, int number_of_cores)
 {
+
+    if (inst == NULL) {
+      return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
+    }
+    int ret_val = Release();
+    if (ret_val < 0) {
+      return ret_val;
+    }
+
+	if (&codec_ != inst) {	
+		codec_ = *inst;
+	}
+
+    av_register_all();
+	pCodec = avcodec_find_decoder(AV_CODEC_ID_H264);
+	if(pCodec == NULL)
+	{
+   		WEBRTC_TRACE(kTraceDebug, kTraceVideoCoding, -1, "fine h264 encoder failed"); 
+		return WEBRTC_VIDEO_CODEC_ERROR;
+	}
+	pCodecCtx = avcodec_alloc_context3(pCodec);
+	pCodecCtx->pix_fmt = AV_PIX_FMT_YUV420P;
+	pCodecCtx->width = codec_.width;
+	pCodecCtx->height = codec_.height;
+	pCodecCtx->time_base.num = 1;
+	pCodecCtx->time_base.den = codec_.maxFramerate;
+
+	pFrameYUV = av_frame_alloc(); // 初始化的时候AVFrame中的元素data,linesize均为空。未指向任何内存数据，必须指向一块内存
+	uint8_t * out_buffer = (uint8_t *)av_malloc(avpicture_get_size(AV_PIX_FMT_YUV420P, codec_.width, codec_.height));
+	avpicture_fill((AVPicture *)pFrameYUV, out_buffer, AV_PIX_FMT_YUV420P, codec_.width, codec_.height);	
+
+	if(avcodec_open2(pCodecCtx, pCodec, NULL) < 0)
+	{
+   		WEBRTC_TRACE(kTraceDebug, kTraceVideoCoding, -1, "open h264 encoder failed"); 
+		return WEBRTC_VIDEO_CODEC_ERROR;
+	}	
+
+	av_init_packet(&enc_pkt);	
+    WEBRTC_TRACE(kTraceDebug, kTraceVideoCoding, -1, "H264Decoder InitDecode success, width:%d, height:%d", codec_.width, codec_.height); 
+	inited_ = true;
 	return WEBRTC_VIDEO_CODEC_OK;
 }
 
 int H264DecoderImpl::Decode(const EncodedImage & input_image, bool missing_frames, const RTPFragmentationHeader * fragmentation, const CodecSpecificInfo * codec_specific_info, int64_t)
 {
+	if (!inited_) {
+		WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCoding, -1,
+			"H264DecoderImpl::Decode, decoder is not initialized");
+		return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
+	}
+
+	if (decode_complete_callback_ == NULL) {
+		WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCoding, -1,
+			"H264DecoderImpl::Decode, decode complete call back is not set");
+		return WEBRTC_VIDEO_CODEC_UNINITIALIZED;
+	}
+
+	if (input_image._buffer == NULL) {
+		WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCoding, -1,
+			"H264DecoderImpl::Decode, null buffer");
+		return WEBRTC_VIDEO_CODEC_ERR_PARAMETER;
+	}
+	if (!codec_specific_info) {
+		WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCoding, -1,
+			"H264EncoderImpl::Decode, no codec info");
+		return WEBRTC_VIDEO_CODEC_ERROR;
+	}
+	if (codec_specific_info->codecType != kVideoCodecH264) {
+		WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCoding, -1,
+			"H264EncoderImpl::Decode, non h264 codec %d", codec_specific_info->codecType);
+		return WEBRTC_VIDEO_CODEC_ERROR;
+	}
+
+	int got_picture = 0;
+
+	enc_pkt.data = input_image._buffer;
+	enc_pkt.size = input_image._length;
+	
+	int ret = avcodec_decode_video2(pCodecCtx, pFrameYUV, &got_picture, &enc_pkt);
+	if(got_picture < 0)
+	{
+   		WEBRTC_TRACE(kTraceDebug, kTraceVideoCoding, -1, "decode h264 data failed"); 
+		return WEBRTC_VIDEO_CODEC_ERROR;		
+	}
+
+	int size_y = pFrameYUV->linesize[0] * pCodecCtx->height;
+	int size_u = pFrameYUV->linesize[1] * pCodecCtx->height / 2;
+	int size_v = pFrameYUV->linesize[2] * pCodecCtx->height / 2;
+	decoded_image_.set_timestamp(input_image._timeStamp);  
+	decoded_image_.CreateFrame(size_y, pFrameYUV->data[0], size_u, pFrameYUV->data[1], size_v, pFrameYUV->data[2], pCodecCtx->width, pCodecCtx->height, pFrameYUV->linesize[0], pFrameYUV->linesize[1], pFrameYUV->linesize[2]);
+	decode_complete_callback_->Decoded(decoded_image_);
+/*
+	static int count = 0;
+	if(count++<50)
+	{
+		fwrite(pFrameYUV->data[0], 1, size_y, fp);
+		fwrite(pFrameYUV->data[1], 1, size_u, fp);
+		fwrite(pFrameYUV->data[2], 1, size_v, fp);
+	}
+	else
+	{
+		fclose(fp);
+	}
+*/	
+//    WEBRTC_TRACE(kTraceDebug, kTraceVideoCoding, -1, "H264Decoder Decode success, linesize[0]: %d, linesize[1]: %d, linesize[2]: %d",pFrameYUV->linesize[0],pFrameYUV->linesize[1],pFrameYUV->linesize[2] ); 
 	return WEBRTC_VIDEO_CODEC_OK;
 }
 
 int H264DecoderImpl::RegisterDecodeCompleteCallback(DecodedImageCallback * callback)
 {
+ 	decode_complete_callback_ = callback;
 	return WEBRTC_VIDEO_CODEC_OK;
 }
 

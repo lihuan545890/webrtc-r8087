@@ -12,15 +12,8 @@
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/interface/tick_util.h"
 
-#ifdef ANDROID_LOG
-#include <android/log.h>
-#include <stdio.h>
 
-#undef WEBRTC_TRACE
-#define WEBRTC_TRACE(a,b,c,...)  __android_log_print(ANDROID_LOG_DEBUG, "*WEBRTC*", __VA_ARGS__)
-#else
-#include "webrtc/system_wrappers/interface/trace.h"
-#endif
+#include "webrtc/system_wrappers/interface/logging.h"
 
 namespace webrtc {
 
@@ -396,14 +389,14 @@ int32_t AndroidNativeOpenGl2Channel::RenderFrame(
  * Calls the Java object and render the buffer in _bufferToRender
  */
 void AndroidNativeOpenGl2Channel::DeliverFrame(JNIEnv* jniEnv) {
-  //TickTime timeNow=TickTime::Now();
+  TickTime timeNow=TickTime::Now();
 
   //Draw the Surface
   jniEnv->CallVoidMethod(_javaRenderObj, _redrawCid);
 
-  // WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer,_id,
-  // "%s: time to deliver %lld" ,__FUNCTION__,
-  // (TickTime::Now()-timeNow).Milliseconds());
+   WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer,_id,
+   "%s: time to deliver %lld" ,__FUNCTION__,
+   (TickTime::Now()-timeNow).Milliseconds());
 }
 
 /*
