@@ -29,8 +29,6 @@
 #include "webrtc/system_wrappers/interface/tick_util.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 
-#include "webrtc/system_wrappers/interface/logging.h"
-
 namespace webrtc {
 
 IncomingVideoStream::IncomingVideoStream(const int32_t module_id,

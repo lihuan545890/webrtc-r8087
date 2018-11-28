@@ -1,7 +1,6 @@
 #include "webrtc/modules/video_coding/codecs/h264/h264_impl.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
-#include "webrtc/system_wrappers/interface/logging.h"
-
+#include "webrtc/system_wrappers/interface/trace.h"
 
 //FILE *fp=fopen("/sdcard/test.h264", "wb");
 FILE *fp = fopen("/sdcard/test.yuv", "wb");

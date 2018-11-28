@@ -27,7 +27,7 @@
 #endif
 #include "webrtc/modules/video_coding/main/source/internal_defines.h"
 #include "webrtc/system_wrappers/interface/logging.h"
-
+#include "webrtc/system_wrappers/interface/trace.h"
 
 
 namespace {

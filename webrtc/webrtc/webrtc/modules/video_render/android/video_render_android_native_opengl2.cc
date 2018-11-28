@@ -12,8 +12,15 @@
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/interface/tick_util.h"
 
+#ifdef ANDROID_LOG
+#include <android/log.h>
+#include <stdio.h>
 
-#include "webrtc/system_wrappers/interface/logging.h"
+#undef WEBRTC_TRACE
+#define WEBRTC_TRACE(a,b,c,...)  __android_log_print(ANDROID_LOG_DEBUG, "*WEBRTC*", __VA_ARGS__)
+#else
+#include "webrtc/system_wrappers/interface/trace.h"
+#endif
 
 namespace webrtc {
 
